@@ -107,6 +107,7 @@
             payAmountLabel: 'بڕی ئێستا',
             payHint: 'ماوە: {amount} {currency}',
             payHintAfter: 'ماوە دوای تۆمارکردن: {amount} {currency}',
+            payRowInfo: 'گشتی {total} · دراوە {paid} · ماوە {remaining}',
             fillRemaining: 'هەموو ماوە',
             paySubmit: 'تۆمارکردن',
             saveFailed: 'پاشەکەوتکردنی داتا سەرکەوتوو نەبوو',
@@ -271,6 +272,7 @@
             payAmountLabel: 'المبلغ الحالي',
             payHint: 'المتبقي: {amount} {currency}',
             payHintAfter: 'المتبقي بعد التسجيل: {amount} {currency}',
+            payRowInfo: 'الإجمالي {total} · المدفوع {paid} · المتبقي {remaining}',
             fillRemaining: 'كل المتبقي',
             paySubmit: 'تسجيل',
             saveFailed: 'تعذر حفظ البيانات',
@@ -435,6 +437,7 @@
             payAmountLabel: 'Current amount',
             payHint: 'Remaining: {amount} {currency}',
             payHintAfter: 'Remaining after recording: {amount} {currency}',
+            payRowInfo: 'Total {total} · Paid {paid} · Remaining {remaining}',
             fillRemaining: 'All remaining',
             paySubmit: 'Record',
             saveFailed: 'Could not save data',
@@ -544,22 +547,17 @@
         iqd: { total: inputIQDTotal, paid: inputIQDPaid, hint: remainingIQD },
         usd: { total: inputUSDTotal, paid: inputUSDPaid, hint: remainingUSD }
     };
-    const formCurrencyTabs = Array.from(document.querySelectorAll('[data-form-currency]'));
-    const formGroups = {
-        iqd: document.querySelector('[data-currency-group="iqd"]'),
-        usd: document.querySelector('[data-currency-group="usd"]')
-    };
     const payScrim = $('#payScrim');
     const payForm = $('#payForm');
     const payIdInput = $('#payId');
     const payPerson = $('#payPerson');
-    const payCurrencyTabs = Array.from(document.querySelectorAll('[data-pay-currency]'));
-    const payTotalEl = $('#payTotal');
-    const payPaidEl = $('#payPaid');
-    const payRemainingEl = $('#payRemaining');
-    const payInput = $('#inputPayAmount');
-    const payUnit = $('#payUnit');
-    const payHint = $('#payHint');
+    const payInputs = { iqd: $('#inputPayIQD'), usd: $('#inputPayUSD') };
+    const payHints = { iqd: $('#payHintIQD'), usd: $('#payHintUSD') };
+    const payInfos = { iqd: $('#payInfoIQD'), usd: $('#payInfoUSD') };
+    const payRows = {
+        iqd: document.querySelector('[data-pay-row="iqd"]'),
+        usd: document.querySelector('[data-pay-row="usd"]')
+    };
     const saveBtn = $('#saveBtnText');
     const importInput = $('#importInput');
     const toastEl = $('#toast');
@@ -617,9 +615,6 @@
     let lastFocus = null;
     let toastTimer = 0;
     let focusTimer = 0;
-    let formCurrency = 'iqd';
-    let payCurrency = 'iqd';
-    const payDrafts = { iqd: 0, usd: 0 };
     const printMode = new URLSearchParams(window.location.search).has('print');
 
     /* ---------- یارمەتیدەرەکان ---------- */
@@ -1027,20 +1022,6 @@
         openSheet(menuScrim);
     }
 
-    function setFormCurrency(code) {
-        formCurrency = CURRENCIES.includes(code) ? code : 'iqd';
-        formCurrencyTabs.forEach((tab) => {
-            const active = tab.dataset.formCurrency === formCurrency;
-            tab.classList.toggle('is-active', active);
-            tab.setAttribute('aria-selected', String(active));
-            tab.tabIndex = active ? 0 : -1;
-        });
-        CURRENCIES.forEach((currency) => {
-            const group = formGroups[currency];
-            if (group) group.hidden = currency !== formCurrency;
-        });
-    }
-
     function openForm(id = '') {
         const item = id ? items.find((entry) => entry.id === id) : null;
         editingId = item ? item.id : '';
@@ -1054,8 +1035,6 @@
             formInputs[code].total.value = total ? fmt(total) : '';
             formInputs[code].paid.value = paid ? fmt(paid) : '';
         });
-        const initialCurrency = ['iqd', 'usd'].find((code) => item && hasCurrency(item, code)) || 'iqd';
-        setFormCurrency(initialCurrency);
         inputNote.value = item && item.note ? item.note : '';
         editIdInput.value = item ? item.id : '';
         inputName.classList.remove('is-invalid');
@@ -1081,59 +1060,46 @@
 
     /* ---------- کردارەکان ---------- */
 
+    function updatePayRow(code) {
+        const item = items.find((entry) => entry.id === payIdInput.value);
+        const input = payInputs[code];
+        if (!item || !input) return;
+        const total = amountOf(item, code);
+        const paid = paidOf(item, code);
+        const remaining = total - paid;
+        payInfos[code].textContent = t('payRowInfo', {
+            total: fmt(total),
+            paid: fmt(paid),
+            remaining: fmt(remaining)
+        });
+        input.disabled = remaining <= 0;
+        const fillBtn = payRows[code].querySelector('[data-fill]');
+        if (fillBtn) fillBtn.disabled = remaining <= 0;
+        const now = Math.min(getRawAmount(input.value), remaining);
+        payHints[code].textContent = now > 0
+            ? t('payHintAfter', { amount: fmt(remaining - now), currency: currencyName(code) })
+            : t('payHint', { amount: fmt(remaining), currency: currencyName(code) });
+    }
+
     function openPay(id) {
         const item = items.find((entry) => entry.id === id);
         if (!item || isPaidItem(item)) return;
         payIdInput.value = item.id;
         payPerson.innerHTML = `${t('payName')}: <strong>${esc(item.name)}</strong>`
             + (item.phone ? `<span class="pay-person__phone" dir="ltr">${esc(item.phone)}</span>` : '');
-        payDrafts.iqd = 0;
-        payDrafts.usd = 0;
-        payCurrencyTabs.forEach((tab) => {
-            const hasRemaining = remainingOf(item, tab.dataset.payCurrency) > 0;
-            tab.disabled = !hasRemaining;
-            tab.setAttribute('aria-disabled', String(!hasRemaining));
+        CURRENCIES.forEach((code) => {
+            const input = payInputs[code];
+            input.value = '';
+            input.disabled = false;
+            payRows[code].hidden = !hasCurrency(item, code);
+            updatePayRow(code);
         });
-        const target = CURRENCIES.find((code) => remainingOf(item, code) > 0) || 'iqd';
-        setPayCurrency(target);
         openSheet(payScrim);
+        const target = CURRENCIES.find((code) => remainingOf(item, code) > 0);
         clearTimeout(focusTimer);
         focusTimer = window.setTimeout(() => {
-            if (!payScrim.hidden) payInput.focus({ preventScroll: true });
+            if (!payScrim.hidden && target) payInputs[target].focus({ preventScroll: true });
         }, 200);
-    }
-
-    function updatePaySummary() {
-        const item = items.find((entry) => entry.id === payIdInput.value);
-        if (!item) return;
-        payTotalEl.textContent = fmt(amountOf(item, payCurrency));
-        payPaidEl.textContent = fmt(paidOf(item, payCurrency));
-        payRemainingEl.textContent = fmt(remainingOf(item, payCurrency));
-    }
-
-    function setPayCurrency(code) {
-        payCurrency = CURRENCIES.includes(code) ? code : 'iqd';
-        payCurrencyTabs.forEach((tab) => {
-            const active = tab.dataset.payCurrency === payCurrency;
-            tab.classList.toggle('is-active', active);
-            tab.setAttribute('aria-selected', String(active));
-            tab.tabIndex = active ? 0 : -1;
-        });
-        payUnit.textContent = t(payCurrency === 'usd' ? 'currencyShortUSD' : 'currencyShortIQD');
-        payInput.value = payDrafts[payCurrency] ? fmt(payDrafts[payCurrency]) : '';
-        updatePaySummary();
-        updatePayHint();
-    }
-
-    function updatePayHint() {
-        const item = items.find((entry) => entry.id === payIdInput.value);
-        if (!item) return;
-        const remaining = remainingOf(item, payCurrency);
-        const now = Math.min(getRawAmount(payInput.value), remaining);
-        payDrafts[payCurrency] = now;
-        payHint.textContent = now > 0
-            ? t('payHintAfter', { amount: fmt(remaining - now), currency: currencyName(payCurrency) })
-            : t('payHint', { amount: fmt(remaining), currency: currencyName(payCurrency) });
     }
 
     /* ---------- زمان ---------- */
@@ -1174,10 +1140,12 @@
             if (!item) return;
             payPerson.innerHTML = `${t('payName')}: <strong>${esc(item.name)}</strong>`
                 + (item.phone ? `<span class="pay-person__phone" dir="ltr">${esc(item.phone)}</span>` : '');
-            payInput.value = payDrafts[payCurrency] ? fmt(payDrafts[payCurrency]) : '';
-            payUnit.textContent = t(payCurrency === 'usd' ? 'currencyShortUSD' : 'currencyShortIQD');
-            updatePaySummary();
-            updatePayHint();
+            CURRENCIES.forEach((code) => {
+                const input = payInputs[code];
+                const raw = getRawAmount(input.value);
+                input.value = raw ? fmt(raw) : '';
+                updatePayRow(code);
+            });
         }
     }
 
@@ -1723,51 +1691,49 @@
         });
     });
 
-    formCurrencyTabs.forEach((tab) => {
-        tab.addEventListener('click', () => setFormCurrency(tab.dataset.formCurrency));
-    });
-
-    payCurrencyTabs.forEach((tab) => {
-        tab.addEventListener('click', () => {
-            if (tab.disabled) return;
-            payDrafts[payCurrency] = getRawAmount(payInput.value);
-            setPayCurrency(tab.dataset.payCurrency);
-            payInput.focus({ preventScroll: true });
+    CURRENCIES.forEach((code) => {
+        payInputs[code].addEventListener('input', (event) => {
+            const raw = getRawAmount(event.target.value);
+            event.target.value = raw ? fmt(raw) : '';
+            updatePayRow(code);
         });
-    });
-
-    payInput.addEventListener('input', (event) => {
-        const raw = getRawAmount(event.target.value);
-        event.target.value = raw ? fmt(raw) : '';
-        updatePayHint();
     });
 
     inputName.addEventListener('input', () => inputName.classList.remove('is-invalid'));
 
-    function fillRemainingPayment() {
+    function fillRemainingPayment(code) {
         const item = items.find((entry) => entry.id === payIdInput.value);
-        if (!item) return;
-        payDrafts[payCurrency] = remainingOf(item, payCurrency);
-        payInput.value = fmt(payDrafts[payCurrency]);
-        updatePayHint();
-        payInput.focus({ preventScroll: true });
+        if (!item || !CURRENCIES.includes(code)) return;
+        const remaining = remainingOf(item, code);
+        const input = payInputs[code];
+        input.value = fmt(remaining);
+        updatePayRow(code);
+        input.focus({ preventScroll: true });
     }
 
     payForm.querySelectorAll('[data-fill]').forEach((btn) => {
-        btn.addEventListener('click', fillRemainingPayment);
+        btn.addEventListener('click', () => fillRemainingPayment(btn.dataset.fill));
     });
 
     payForm.addEventListener('submit', (event) => {
         event.preventDefault();
         const item = items.find((entry) => entry.id === payIdInput.value);
         if (!item) return;
-        const now = Math.min(getRawAmount(payInput.value), remainingOf(item, payCurrency));
-        if (now <= 0) {
+        const payments = {};
+        CURRENCIES.forEach((code) => {
+            payments[code] = getRawAmount(payInputs[code].value) > 0
+                ? Math.min(getRawAmount(payInputs[code].value), remainingOf(item, code))
+                : 0;
+        });
+        if (!CURRENCIES.some((code) => payments[code] > 0)) {
             showToast(t('invalidPay'), true);
-            payInput.focus({ preventScroll: true });
+            const first = CURRENCIES.find((code) => remainingOf(item, code) > 0);
+            if (first) payInputs[first].focus({ preventScroll: true });
             return;
         }
-        item[payCurrency + 'Paid'] = paidOf(item, payCurrency) + now;
+        CURRENCIES.forEach((code) => {
+            if (payments[code] > 0) item[code + 'Paid'] = paidOf(item, code) + payments[code];
+        });
         delete item.previousAmount;
         if (!persist()) return;
         render();
@@ -1805,7 +1771,6 @@
 
         if (!CURRENCIES.some((code) => values[code].total > 0)) {
             showToast(t('noCurrencyAmount'), true);
-            setFormCurrency('iqd');
             formInputs.iqd.total.focus();
             return;
         }

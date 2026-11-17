@@ -206,13 +206,8 @@
                     <input type="tel" id="inputPhone" name="phone" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="07XX XXX XXXX" data-i18n-placeholder="phonePlaceholder">
                     <p class="field__hint" data-i18n="phoneHint">ئارەزوومەندانە — بۆ پەیوەندیکردن</p>
                 </div>
-                <div class="currency-switch">
-                    <div class="currency-tabs" role="tablist" aria-label="دراو" data-i18n-aria-label="currencyTabsLabel">
-                        <button type="button" class="currency-tab is-active" role="tab" data-form-currency="iqd" aria-selected="true" data-i18n="currencyIQD">دینار</button>
-                        <button type="button" class="currency-tab" role="tab" data-form-currency="usd" aria-selected="false" data-i18n="currencyUSD">دۆلار</button>
-                    </div>
-                </div>
                 <div class="currency-group" data-currency-group="iqd">
+                    <h3 class="currency-group__title" data-i18n="currencyIQD">دینار</h3>
                     <div class="field-row">
                         <div class="field">
                             <label for="inputIQDTotal" data-i18n="fieldTotalLabel">نرخی گشتی</label>
@@ -231,7 +226,8 @@
                     </div>
                     <p class="field__hint field__hint--strong" id="remainingIQD" aria-live="polite">ماوە: 0 دینار</p>
                 </div>
-                <div class="currency-group currency-group--usd" data-currency-group="usd" hidden>
+                <div class="currency-group currency-group--usd" data-currency-group="usd">
+                    <h3 class="currency-group__title" data-i18n="currencyUSD">دۆلار</h3>
                     <div class="field-row">
                         <div class="field">
                             <label for="inputUSDTotal" data-i18n="fieldTotalLabel">نرخی گشتی</label>
@@ -276,33 +272,32 @@
             <p class="pay-person" id="payPerson"></p>
             <form id="payForm" novalidate>
                 <input type="hidden" id="payId" value="">
-                <div class="currency-tabs currency-tabs--pay" role="tablist" aria-label="دراو" data-i18n-aria-label="currencyTabsLabel">
-                    <button type="button" class="currency-tab is-active" role="tab" data-pay-currency="iqd" aria-selected="true" data-i18n="currencyIQD">دینار</button>
-                    <button type="button" class="currency-tab" role="tab" data-pay-currency="usd" aria-selected="false" data-i18n="currencyUSD">دۆلار</button>
-                </div>
-                <div class="pay-summary">
-                    <div>
-                        <span data-i18n="totalLabel">نرخی گشتی</span>
-                        <strong id="payTotal">0</strong>
+                <div class="pay-row" data-pay-row="iqd">
+                    <div class="pay-row__head">
+                        <span class="pay-row__currency" data-i18n="currencyIQD">دینار</span>
+                        <span class="pay-row__info" id="payInfoIQD"></span>
                     </div>
-                    <div>
-                        <span data-i18n="paidBeforeLabel">پێشتر دراوە</span>
-                        <strong id="payPaid">0</strong>
-                    </div>
-                    <button type="button" class="pay-summary__fill" data-fill title="بڕی ماوە بخەرە خانەی بڕی ئێستا" aria-label="بڕی ماوە بخەرە خانەی بڕی ئێستا" data-i18n-title="payFillTitle" data-i18n-aria-label="payFillTitle">
-                        <span data-i18n="remainingLabel">ماوە</span>
-                        <strong id="payRemaining">0</strong>
-                    </button>
-                </div>
-                <div class="field">
-                    <label for="inputPayAmount" data-i18n="payAmountLabel">بڕی ئێستا</label>
                     <div class="amount-field">
-                        <input type="text" id="inputPayAmount" inputmode="numeric" autocomplete="off" placeholder="0">
-                        <span class="amount-field__unit" id="payUnit" aria-hidden="true">د.ع</span>
+                        <input type="text" id="inputPayIQD" inputmode="numeric" autocomplete="off" placeholder="0" aria-label="بڕی ئێستا" data-i18n-aria-label="payAmountLabel">
+                        <span class="amount-field__unit" aria-hidden="true" data-i18n="currencyShortIQD">د.ع</span>
                     </div>
                     <div class="pay-hint-row">
-                        <p class="field__hint field__hint--strong" id="payHint" aria-live="polite">ماوە: 0 دینار</p>
-                        <button type="button" class="link-btn" data-fill data-i18n="fillRemaining">هەموو ماوە</button>
+                        <p class="field__hint field__hint--strong" id="payHintIQD" aria-live="polite"></p>
+                        <button type="button" class="link-btn" data-fill="iqd" data-i18n="fillRemaining">هەموو ماوە</button>
+                    </div>
+                </div>
+                <div class="pay-row" data-pay-row="usd">
+                    <div class="pay-row__head">
+                        <span class="pay-row__currency" data-i18n="currencyUSD">دۆلار</span>
+                        <span class="pay-row__info" id="payInfoUSD"></span>
+                    </div>
+                    <div class="amount-field">
+                        <input type="text" id="inputPayUSD" inputmode="numeric" autocomplete="off" placeholder="0" aria-label="بڕی ئێستا" data-i18n-aria-label="payAmountLabel">
+                        <span class="amount-field__unit" aria-hidden="true" data-i18n="currencyShortUSD">USD</span>
+                    </div>
+                    <div class="pay-hint-row">
+                        <p class="field__hint field__hint--strong" id="payHintUSD" aria-live="polite"></p>
+                        <button type="button" class="link-btn" data-fill="usd" data-i18n="fillRemaining">هەموو ماوە</button>
                     </div>
                 </div>
                 <div class="form-actions">
