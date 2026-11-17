@@ -588,6 +588,11 @@
         iqd: { total: inputIQDTotal, paid: inputIQDPaid, hint: remainingIQD },
         usd: { total: inputUSDTotal, paid: inputUSDPaid, hint: remainingUSD }
     };
+    const formCurrencyBtns = Array.from(document.querySelectorAll('[data-form-currency]'));
+    const formGroups = {
+        iqd: document.querySelector('[data-currency-group="iqd"]'),
+        usd: document.querySelector('[data-currency-group="usd"]')
+    };
     const payScrim = $('#payScrim');
     const payForm = $('#payForm');
     const payIdInput = $('#payId');
@@ -653,6 +658,7 @@
     let cloudActive = false;
     let cloudSyncTrouble = false;
     let cloudIssueKind = '';
+    let formCurrency = 'iqd';
     let authMode = 'signin';
     let pendingAuthError = '';
     let items = loadItems();
@@ -1145,6 +1151,8 @@
         editIdInput.value = item ? item.id : '';
         inputName.classList.remove('is-invalid');
         updateRemainingHints();
+        const startCode = item && !amountOf(item, 'iqd') && amountOf(item, 'usd') ? 'usd' : 'iqd';
+        setFormCurrency(startCode);
         openSheet(formScrim);
         clearTimeout(focusTimer);
         focusTimer = window.setTimeout(() => {
@@ -1161,6 +1169,17 @@
                 amount: fmt(amount - paid),
                 currency: currencyName(code)
             });
+        });
+    }
+
+    function setFormCurrency(code) {
+        if (!CURRENCIES.includes(code)) return;
+        formCurrency = code;
+        formCurrencyBtns.forEach((btn) => {
+            btn.classList.toggle('is-active', btn.dataset.formCurrency === code);
+        });
+        CURRENCIES.forEach((c) => {
+            if (formGroups[c]) formGroups[c].hidden = c !== code;
         });
     }
 
@@ -1871,6 +1890,10 @@
                 updateRemainingHints();
             });
         });
+    });
+
+    formCurrencyBtns.forEach((btn) => {
+        btn.addEventListener('click', () => setFormCurrency(btn.dataset.formCurrency));
     });
 
     CURRENCIES.forEach((code) => {

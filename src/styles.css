@@ -1204,6 +1204,31 @@ svg {
     color: var(--slate-900);
 }
 
+.form-currency {
+    display: flex;
+    gap: 10px;
+    margin: 0 0 14px;
+}
+
+.form-currency__btn {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--slate-600);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.form-currency__btn.is-active {
+    border-color: var(--emerald-600);
+    background: var(--emerald-50);
+    color: var(--emerald-700);
+}
+
 .currency-group--usd .currency-group__title {
     color: #2563eb;
 }
