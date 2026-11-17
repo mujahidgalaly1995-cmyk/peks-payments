@@ -6,6 +6,8 @@
     const LAST_BACKUP_KEY = 'app_payments_backup_at_v1';
     const HINT_KEY = 'payments_install_hint_dismissed_v1';
     const LANG_KEY = 'app_lang_v1';
+    const SNAPSHOT_KEY = 'app_payments_device_snapshot_v1';
+    const LAST_CLOUD_KEY = 'app_payments_last_cloud_save_v1';
 
     const LANG_META = {
         ku: { htmlLang: 'ckb', dir: 'rtl', numberLocale: 'en-US', dateLocale: 'ckb-IQ' },
@@ -75,9 +77,20 @@
             authErrorCancelled: 'چوونەژوورەوە پاشگەزکرایەوە',
             authIosHint: 'لە ئایفۆن، بە ئیمەیل و وشەی نهێنی بچۆ ژوورەوە — گووگڵ لە ئەپی سەر شاشە لەوانەیە کار نەکات.',
             authSignOut: 'دەرچوون لە هەژمار',
-            authSignOutConfirm: 'دەرچوون لە هەژمار؟ داتاکانت لە هەژمارەکەتدا دەمێننەوە.',
+            authSignOutConfirm: 'دەرچوون لە هەژمار؟ داتاکانت لەم ئامێرە دەمێننەوە و لە هەژمارەکەشتدا پارێزراون.',
             cloudUploaded: 'داتاکانت بۆ هەژمارەکەت بارکران',
             cloudSyncFailed: 'هاوکاتکردن لەگەڵ هەژمار نەکرا — داتاکان لەم ئامێرە پارێزراون',
+            menuSaveNow: 'هاوکاتکردنەوەی ئێستا',
+            menuRestoreDevice: 'گەڕاندنەوەی داتای ئەم ئامێرە',
+            saveNowDone: 'داتاکانت ئێستا لەگەڵ هەژمار هاوکات کران',
+            saveNowFailed: 'هاوکاتکردنەوە سەرکەوتوو نەبوو — داتاکانت لەم ئامێرە پارێزراون',
+            restoreDeviceConfirm: 'داتای ئەم ئامێرە بگەڕێندرێتەوە؟ داتای ئێستا دەگۆڕدرێت بۆ داتای پێشووی ئەم ئامێرە.',
+            restoreDeviceDone: 'داتای ئەم ئامێرە گەڕێندرایەوە',
+            restoreDeviceNone: 'داتایەکی پێشوو لەم ئامێرە نەدۆزرایەوە',
+            cloudStateSaved: 'دوایین هاوکاتکردن لەگەڵ هەژمار: {time}',
+            cloudStatePending: 'هاوکاتکردن لەگەڵ هەژمار نەکراوە',
+            cloudStateError: 'هاوکاتکردن سەرکەوتوو نەبوو',
+            cloudLockedNotice: 'هاوکاتکردن لەگەڵ هەژمار ئێستا کار ناکات — داتاکانت لەم ئامێرە پارێزراون. لە Firebase Console، لە Firestore مافی خوێندنەوە و نووسین بۆ بەکارهێنەرانی چووەژوور پێبدە.',
             close: 'داخستن',
             addTitle: 'زیادکردنی ناوی نوێ',
             editTitle: 'دەستکاریکردنی تۆمار',
@@ -240,9 +253,20 @@
             authErrorCancelled: 'تم إلغاء تسجيل الدخول',
             authIosHint: 'على iPhone، سجّل الدخول بالبريد وكلمة المرور — قد لا يعمل Google داخل تطبيق الشاشة الرئيسية.',
             authSignOut: 'تسجيل الخروج',
-            authSignOutConfirm: 'تسجيل الخروج؟ ستبقى بياناتك محفوظة في حسابك.',
+            authSignOutConfirm: 'تسجيل الخروج؟ ستبقى بياناتك على هذا الجهاز وفي حسابك.',
             cloudUploaded: 'تم رفع بياناتك إلى حسابك',
             cloudSyncFailed: 'تعذرت المزامنة مع الحساب — بياناتك محفوظة على هذا الجهاز',
+            menuSaveNow: 'مزامنة الآن',
+            menuRestoreDevice: 'استعادة بيانات هذا الجهاز',
+            saveNowDone: 'تمت مزامنة بياناتك مع حسابك الآن',
+            saveNowFailed: 'تعذرت المزامنة — بياناتك محفوظة على هذا الجهاز',
+            restoreDeviceConfirm: 'استعادة بيانات هذا الجهاز؟ سيتم استبدال البيانات الحالية ببيانات هذا الجهاز السابقة.',
+            restoreDeviceDone: 'تمت استعادة بيانات هذا الجهاز',
+            restoreDeviceNone: 'لا توجد بيانات سابقة محفوظة على هذا الجهاز',
+            cloudStateSaved: 'آخر مزامنة مع الحساب: {time}',
+            cloudStatePending: 'لم تتم المزامنة مع الحساب',
+            cloudStateError: 'تعذرت المزامنة مع الحساب',
+            cloudLockedNotice: 'المزامنة مع الحساب لا تعمل حاليًا — بياناتك محفوظة على هذا الجهاز. افتح Firebase Console وفعّل صلاحية القراءة والكتابة في Firestore للمستخدمين المسجّلين.',
             close: 'إغلاق',
             addTitle: 'إضافة اسم جديد',
             editTitle: 'تعديل السجل',
@@ -405,9 +429,20 @@
             authErrorCancelled: 'Sign-in was cancelled',
             authIosHint: 'On iPhone, sign in with email and password — Google may not work inside the home-screen app.',
             authSignOut: 'Sign out',
-            authSignOutConfirm: 'Sign out? Your data stays saved in your account.',
+            authSignOutConfirm: 'Sign out? Your data stays on this device and in your account.',
             cloudUploaded: 'Your data was uploaded to your account',
             cloudSyncFailed: "Couldn't sync with your account — data is kept on this device",
+            menuSaveNow: 'Sync now',
+            menuRestoreDevice: 'Restore this device’s data',
+            saveNowDone: 'Your data is now synced with your account',
+            saveNowFailed: "Couldn't sync — your data is kept on this device",
+            restoreDeviceConfirm: 'Restore this device’s data? Current data will be replaced by this device’s previous data.',
+            restoreDeviceDone: "This device's data was restored",
+            restoreDeviceNone: 'No previous data was found on this device',
+            cloudStateSaved: 'Last sync with account: {time}',
+            cloudStatePending: 'Not synced with your account yet',
+            cloudStateError: "Couldn't sync with your account",
+            cloudLockedNotice: "Account sync isn't working right now — your data is kept on this device. In Firebase Console, allow Firestore read/write for signed-in users.",
             close: 'Close',
             addTitle: 'Add new name',
             editTitle: 'Edit record',
@@ -583,6 +618,9 @@
     const authIosNote = $('#authIosNote');
     const gateLangBtns = Array.from(document.querySelectorAll('[data-gate-lang]'));
     const menuAccount = $('#menuAccount');
+    const cloudState = $('#cloudState');
+    const syncNowItem = $('#syncNowItem');
+    const restoreDeviceItem = $('#restoreDeviceItem');
     const signOutItem = $('#signOutItem');
 
     const RLM = '\u200F';
@@ -607,6 +645,7 @@
 
     let recoveredFromBackup = false;
     let cloudActive = false;
+    let cloudSyncTrouble = false;
     let authMode = 'signin';
     let pendingAuthError = '';
     let items = loadItems();
@@ -809,7 +848,50 @@
         } catch (error) {
             /* the mirror copy is best-effort */
         }
+        try {
+            if (items.length) {
+                localStorage.setItem(SNAPSHOT_KEY, JSON.stringify({ at: Date.now(), items: items }));
+            }
+        } catch (error) {
+            /* the device snapshot is best-effort */
+        }
         return true;
+    }
+
+    function readDeviceSnapshot() {
+        try {
+            const raw = localStorage.getItem(SNAPSHOT_KEY);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (!parsed || !Array.isArray(parsed.items) || !parsed.items.length) return null;
+            return { at: Number(parsed.at) || 0, items: parsed.items.map(normalizeItem) };
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function cloudSavedAt() {
+        const cloud = window.PaymentsCloud;
+        if (cloud && cloud.lastSavedAt) return cloud.lastSavedAt;
+        return Number(localStorage.getItem(LAST_CLOUD_KEY) || 0) || 0;
+    }
+
+    function refreshCloudState() {
+        if (!cloudState) return;
+        if (!cloudActive) {
+            cloudState.hidden = true;
+            return;
+        }
+        cloudState.hidden = false;
+        cloudState.classList.toggle('menu__cloud--error', cloudSyncTrouble);
+        if (cloudSyncTrouble) {
+            cloudState.textContent = t('cloudStateError');
+            return;
+        }
+        const at = cloudSavedAt();
+        cloudState.textContent = at
+            ? t('cloudStateSaved', { time: new Intl.DateTimeFormat(LANG_META[lang].dateLocale, { dateStyle: 'short', timeStyle: 'short' }).format(new Date(at)) })
+            : t('cloudStatePending');
     }
 
     function persist() {
@@ -1019,6 +1101,9 @@
     }
 
     function openMenu() {
+        syncNowItem.hidden = !cloudActive;
+        restoreDeviceItem.hidden = !readDeviceSnapshot();
+        refreshCloudState();
         openSheet(menuScrim);
     }
 
@@ -1478,11 +1563,30 @@
                 showToast(t('cloudSyncFailed'), true);
                 return;
             }
+            if (code === 'sync') {
+                const first = !cloudSyncTrouble;
+                cloudSyncTrouble = true;
+                refreshCloudState();
+                if (first) showToast(t('cloudSyncFailed'), true);
+                return;
+            }
             showToast(t('cloudSyncFailed'), true);
         });
 
+        cloud.onSaved((stamp) => {
+            cloudSyncTrouble = false;
+            try {
+                localStorage.setItem(LAST_CLOUD_KEY, String(stamp));
+            } catch (error) {
+                /* display-only timestamp */
+            }
+            refreshCloudState();
+        });
+
         cloud.onData((cloudItems) => {
+            if (!cloudItems || !cloudItems.length) return;
             items = cloudItems.map(normalizeItem);
+            cloudSyncTrouble = false;
             persistLocal();
             render();
         });
@@ -1491,8 +1595,10 @@
             window.clearTimeout(stuckTimer);
             if (!user) {
                 cloudActive = false;
+                cloudSyncTrouble = false;
                 menuAccount.hidden = true;
                 signOutItem.hidden = true;
+                refreshCloudState();
                 showAuthForm();
                 return;
             }
@@ -1506,16 +1612,31 @@
                     items = cloudItems.map(normalizeItem);
                     persistLocal();
                     render();
-                } else if (items.length) {
-                    await cloud.save(items);
-                    showToast(t('cloudUploaded'));
+                } else {
+                    if (!items.length) {
+                        const snap = readDeviceSnapshot();
+                        if (snap) {
+                            items = snap.items;
+                            persistLocal();
+                            render();
+                            showToast(t('restoreDeviceDone'));
+                        }
+                    }
+                    if (items.length) {
+                        await cloudCall(cloud.saveNow(items), 15000);
+                        showToast(t('cloudUploaded'));
+                    }
                 }
+                cloudSyncTrouble = false;
                 cloudActive = true;
                 cloud.startSync();
             } catch (error) {
                 cloudActive = true;
+                cloudSyncTrouble = true;
+                cloud.startSync();
                 showToast(t('cloudSyncFailed'), true);
             }
+            refreshCloudState();
         });
 
         authForm.addEventListener('submit', async (event) => {
@@ -1577,12 +1698,42 @@
             return;
         }
         cloudActive = false;
+        cloudSyncTrouble = false;
         cloud.stopSync();
-        items = [];
         persistLocal();
         render();
         menuAccount.hidden = true;
         signOutItem.hidden = true;
+        refreshCloudState();
+    }
+
+    async function runSaveNow() {
+        const cloud = window.PaymentsCloud;
+        if (!cloud || !cloud.enabled || !cloud.saveNow) return;
+        if (!items.length) {
+            showToast(t('cloudStatePending'));
+            return;
+        }
+        try {
+            await cloudCall(cloud.saveNow(items), 15000);
+            showToast(t('saveNowDone'));
+        } catch (error) {
+            showToast(t('saveNowFailed'), true);
+        }
+        refreshCloudState();
+    }
+
+    function restoreDeviceData() {
+        const snap = readDeviceSnapshot();
+        if (!snap) {
+            showToast(t('restoreDeviceNone'), true);
+            return;
+        }
+        if (!window.confirm(t('restoreDeviceConfirm'))) return;
+        items = snap.items.map(normalizeItem);
+        persist();
+        render();
+        showToast(t('restoreDeviceDone'));
     }
 
     /* ---------- ڕووداوەکان ---------- */
@@ -1648,6 +1799,8 @@
                 break;
             case 'backup': backupData(); break;
             case 'restore': importInput.click(); break;
+            case 'saveNow': runSaveNow(); break;
+            case 'restoreDevice': restoreDeviceData(); break;
             case 'print': doPrint(); break;
             case 'clear': clearAll(); break;
             case 'signout': signOutCloud(); break;

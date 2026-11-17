@@ -3,25 +3,29 @@
 
     const config = window.FIREBASE_CONFIG;
     const enabled = Boolean(config && config.apiKey && config.projectId && config.appId);
-    const listeners = { auth: [], data: [], error: [] };
+    const listeners = { auth: [], data: [], error: [], saved: [] };
 
     const api = {
         enabled: enabled,
         user: null,
         ready: null,
         readyState: 'idle',
+        lastSavedAt: 0,
+        lastSaveErrorAt: 0,
         onAuth: (cb) => {
             listeners.auth.push(cb);
             if (api.readyState === 'done' && authResolved) cb(api.user);
         },
         onData: (cb) => listeners.data.push(cb),
         onError: (cb) => listeners.error.push(cb),
+        onSaved: (cb) => listeners.saved.push(cb),
         signInGoogle: null,
         signInEmail: null,
         signUpEmail: null,
         signOut: null,
         load: null,
         save: null,
+        saveNow: null,
         startSync: null,
         stopSync: null
     };
@@ -56,11 +60,8 @@
         }
     }
 
-    async function flush() {
-        saveTimer = 0;
-        if (!user || !docRef || !pendingItems) return;
-        const items = pendingItems;
-        pendingItems = null;
+    async function writeItems(items) {
+        if (!user || !docRef) return false;
         const stamp = Date.now();
         lastWriteAt = stamp;
         try {
@@ -69,9 +70,22 @@
                 updatedAt: stamp,
                 email: user.email || ''
             });
+            api.lastSavedAt = stamp;
+            emit('saved', stamp);
+            return true;
         } catch (error) {
+            api.lastSaveErrorAt = Date.now();
             emit('error', { code: 'sync' });
+            return false;
         }
+    }
+
+    async function flush() {
+        saveTimer = 0;
+        if (!user || !docRef || !pendingItems) return true;
+        const items = pendingItems;
+        pendingItems = null;
+        return writeItems(items);
     }
 
     api.save = (items) => {
@@ -79,6 +93,17 @@
         pendingItems = items;
         window.clearTimeout(saveTimer);
         saveTimer = window.setTimeout(flush, 700);
+    };
+
+    api.saveNow = async (items) => {
+        await api.ready;
+        if (!user || !docRef) throw new Error('not-signed-in');
+        window.clearTimeout(saveTimer);
+        saveTimer = 0;
+        pendingItems = null;
+        const ok = await writeItems(items);
+        if (!ok) throw new Error('sync');
+        return true;
     };
 
     api.load = async () => {
@@ -136,6 +161,9 @@
 
     api.signOut = async () => {
         await api.ready;
+        if (pendingItems && user && docRef) {
+            await flush();
+        }
         window.clearTimeout(saveTimer);
         saveTimer = 0;
         pendingItems = null;
