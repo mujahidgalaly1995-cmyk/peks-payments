@@ -1499,6 +1499,23 @@ body.print-mode .print-sheet {
         border-radius: 0;
         box-shadow: none;
     }
+
+    .print-table {
+        font-size: 9.5px;
+    }
+
+    .print-table th,
+    .print-table td {
+        padding: 4px 5px;
+    }
+
+    .print-money {
+        gap: 0 6px;
+    }
+
+    .print-money em {
+        font-size: 8px;
+    }
 }
 
 .print-sheet__head {
@@ -1560,27 +1577,31 @@ body.print-mode .print-sheet {
     border: 1px solid #cbd5e1;
     text-align: start;
     vertical-align: middle;
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
+    word-break: normal;
 }
 
 .print-table .col-note {
-    width: 16%;
+    width: 14%;
+    overflow-wrap: anywhere;
 }
 
 .print-table .col-money {
-    width: 20%;
+    width: 21%;
 }
 
 .print-money {
-    display: grid;
-    gap: 1px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1px 8px;
     font-variant-numeric: tabular-nums;
 }
 
 .print-money span {
-    display: flex;
-    justify-content: space-between;
-    gap: 6px;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    white-space: nowrap;
 }
 
 .print-money em {

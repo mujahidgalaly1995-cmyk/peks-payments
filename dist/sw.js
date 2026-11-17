@@ -1,4 +1,4 @@
-const CACHE_NAME = 'payments-app-v21';
+const CACHE_NAME = 'payments-app-v22';
 
 const APP_SHELL = [
     './',
