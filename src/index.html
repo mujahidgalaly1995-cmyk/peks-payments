@@ -168,10 +168,6 @@
                     <span class="menu__icon menu__icon--amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V10"/><path d="m8 14 4-4 4 4"/><path d="M4 8V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3"/></svg></span>
                     <span data-i18n="menuRestore">گەڕاندنەوە لە فایل</span>
                 </button>
-                <button type="button" class="menu__item" data-menu="github">
-                    <span class="menu__icon menu__icon--slate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="5" r="2.2"/><circle cx="18" cy="5" r="2.2"/><circle cx="12" cy="19" r="2.2"/><path d="M6 7.2v3.3A2.5 2.5 0 0 0 8.5 13h7a2.5 2.5 0 0 0 2.5-2.5V7.2"/><path d="M12 13v3.8"/></svg></span>
-                    <span data-i18n="menuGithub">پاشەکەوتی GitHub</span>
-                </button>
                 <button type="button" class="menu__item" data-menu="print">
                     <span class="menu__icon menu__icon--slate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="7" rx="2"/><path d="M7 14h10v6H7z"/></svg></span>
                     <span data-i18n="menuPrint">چاپکردن</span>
@@ -314,33 +310,6 @@
                     <button type="button" class="btn btn--ghost" data-close-sheet data-i18n="cancel">پاشگەزبوونەوە</button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- پەنجەرەی پاشەکەوتی GitHub -->
-    <div class="scrim" id="ghScrim" hidden>
-        <div class="sheet sheet--form" role="dialog" aria-modal="true" aria-labelledby="ghTitle">
-            <div class="sheet__handle" aria-hidden="true"></div>
-            <div class="sheet__head">
-                <h2 class="sheet__title" id="ghTitle" data-i18n="ghTitle">پاشەکەوتی GitHub</h2>
-                <button type="button" class="icon-btn icon-btn--sm" data-close-sheet aria-label="داخستن" data-i18n-aria-label="close">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
-                </button>
-            </div>
-            <div class="field">
-                <label for="ghRepo" data-i18n="ghRepoLabel">ناوی ڕیپۆ</label>
-                <input type="text" id="ghRepo" dir="ltr" autocomplete="off" spellcheck="false" placeholder="owner/repo">
-            </div>
-            <div class="field">
-                <label for="ghToken" data-i18n="ghTokenLabel">تۆکنی GitHub</label>
-                <input type="password" id="ghToken" dir="ltr" autocomplete="off" spellcheck="false" placeholder="github_pat_...">
-                <p class="field__hint" data-i18n="ghTokenHint">تۆکن تەنها لەم ئامێرە دەمێنێتەوە و ناچێتە ناو ماڵپەڕەکەوە.</p>
-            </div>
-            <p class="field__hint field__hint--strong" id="ghStatus" aria-live="polite"></p>
-            <div class="form-actions">
-                <button type="button" class="btn btn--primary" id="ghSaveBtn" data-i18n="ghSave">پاشەکەوتکردن و هاوکاتکردن</button>
-                <button type="button" class="btn btn--ghost" data-close-sheet data-i18n="cancel">پاشگەزبوونەوە</button>
-            </div>
         </div>
     </div>
 
