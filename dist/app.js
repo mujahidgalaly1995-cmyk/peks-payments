@@ -6,6 +6,11 @@
     const LAST_BACKUP_KEY = 'app_payments_backup_at_v1';
     const HINT_KEY = 'payments_install_hint_dismissed_v1';
     const LANG_KEY = 'app_lang_v1';
+    const GH_TOKEN_KEY = 'app_payments_github_token_v1';
+    const GH_REPO_KEY = 'app_payments_github_repo_v1';
+    const GH_LAST_KEY = 'app_payments_github_last_v1';
+    const GH_DEFAULT_REPO = 'mujahidgalaly1995-cmyk/peks-payments';
+    const GH_FILE_PATH = 'data/payments.json';
 
     const LANG_META = {
         ku: { htmlLang: 'ckb', dir: 'rtl', numberLocale: 'en-US', dateLocale: 'ckb-IQ' },
@@ -47,6 +52,17 @@
             menuCopy: 'کۆپیکردنی لیستە',
             menuBackup: 'پاشەکەوتکردنی نسخە (فایل)',
             menuRestore: 'گەڕاندنەوە لە فایل',
+            menuGithub: 'پاشەکەوتی GitHub',
+            ghTitle: 'پاشەکەوتی GitHub',
+            ghRepoLabel: 'ناوی ڕیپۆ',
+            ghTokenLabel: 'تۆکنی GitHub',
+            ghTokenHint: 'تۆکن تەنها لەم ئامێرە دەمێنێتەوە و ناچێتە ناو ماڵپەڕەکەوە.',
+            ghSave: 'پاشەکەوتکردن و هاوکاتکردن',
+            ghSaved: 'داتاکان لە GitHub پاشەکەوتکران',
+            ghFailed: 'پاشەکەوتکردن لە GitHub سەرکەوتوو نەبوو',
+            ghInvalidRepo: 'ناوی ڕیپۆ بەم شێوەیە بنووسە: owner/repo',
+            ghLastSync: 'دوایین پاشەکەوت: {time}',
+            ghTokenNeeded: 'تۆکنی GitHub پێویستە',
             menuPrint: 'چاپکردن',
             menuClear: 'سڕینەوەی هەموو تۆمارەکان',
             authSubtitle: 'بۆ پاراستنی داتاکانت بچۆ ژوورەوە',
@@ -211,6 +227,17 @@
             menuCopy: 'نسخ القائمة',
             menuBackup: 'حفظ نسخة احتياطية (ملف)',
             menuRestore: 'استعادة من ملف',
+            menuGithub: 'نسخ احتياطي إلى GitHub',
+            ghTitle: 'نسخ احتياطي إلى GitHub',
+            ghRepoLabel: 'اسم المستودع',
+            ghTokenLabel: 'رمز GitHub',
+            ghTokenHint: 'الرمز يبقى على هذا الجهاز فقط ولا يُرسل إلى الموقع.',
+            ghSave: 'حفظ ومزامنة',
+            ghSaved: 'تم حفظ البيانات في GitHub',
+            ghFailed: 'لم تنجح المزامنة مع GitHub',
+            ghInvalidRepo: 'اكتب اسم المستودع بهذا الشكل: owner/repo',
+            ghLastSync: 'آخر نسخة: {time}',
+            ghTokenNeeded: 'رمز GitHub مطلوب',
             menuPrint: 'طباعة',
             menuClear: 'حذف جميع السجلات',
             authSubtitle: 'سجّل الدخول للحفاظ على بياناتك آمنة',
@@ -375,6 +402,17 @@
             menuCopy: 'Copy list',
             menuBackup: 'Save backup (file)',
             menuRestore: 'Restore from file',
+            menuGithub: 'GitHub backup',
+            ghTitle: 'GitHub backup',
+            ghRepoLabel: 'Repository name',
+            ghTokenLabel: 'GitHub token',
+            ghTokenHint: 'The token stays on this device only and is never sent to the website.',
+            ghSave: 'Save and sync',
+            ghSaved: 'Data saved to GitHub',
+            ghFailed: 'GitHub backup failed',
+            ghInvalidRepo: 'Write the repository name like this: owner/repo',
+            ghLastSync: 'Last backup: {time}',
+            ghTokenNeeded: 'GitHub token is required',
             menuPrint: 'Print',
             menuClear: 'Delete all records',
             authSubtitle: 'Sign in to keep your data safe',
@@ -527,6 +565,11 @@
     const langShort = $('#langShort');
     const langOptions = Array.from(document.querySelectorAll('[data-lang-option]'));
     const menuScrim = $('#menuScrim');
+    const ghScrim = $('#ghScrim');
+    const ghRepoInput = $('#ghRepo');
+    const ghTokenInput = $('#ghToken');
+    const ghStatus = $('#ghStatus');
+    const ghSaveBtn = $('#ghSaveBtn');
     const formScrim = $('#formScrim');
     const formTitle = $('#formTitle');
     const entryForm = $('#entryForm');
@@ -822,7 +865,109 @@
         if (cloudActive && window.PaymentsCloud && window.PaymentsCloud.save) {
             window.PaymentsCloud.save(items);
         }
+        scheduleGithubSync();
         return true;
+    }
+
+    /* ---------- پاشەکەوتی GitHub ---------- */
+
+    let ghTimer = 0;
+    let ghBusy = false;
+    let ghAgain = false;
+
+    function ghConfig() {
+        let token = '';
+        let repo = '';
+        try {
+            token = localStorage.getItem(GH_TOKEN_KEY) || '';
+            repo = localStorage.getItem(GH_REPO_KEY) || GH_DEFAULT_REPO;
+        } catch (error) { /* ignore */ }
+        return { repo: repo, token: token };
+    }
+
+    function ghStatusText(text) {
+        if (ghStatus) ghStatus.textContent = text || '';
+    }
+
+    function base64Utf8(text) {
+        const bytes = new TextEncoder().encode(text);
+        let binary = '';
+        bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+        return btoa(binary);
+    }
+
+    function ghHeaders(token) {
+        return {
+            Authorization: 'Bearer ' + token,
+            Accept: 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28'
+        };
+    }
+
+    async function pushToGithub() {
+        const config = ghConfig();
+        if (!config.token || !config.repo) return false;
+        if (ghBusy) {
+            ghAgain = true;
+            return false;
+        }
+        ghBusy = true;
+        const url = 'https://api.github.com/repos/' + config.repo + '/contents/' + GH_FILE_PATH;
+        try {
+            let sha = '';
+            const head = await fetch(url, { headers: ghHeaders(config.token), cache: 'no-store' });
+            if (head.status === 200) {
+                const current = await head.json();
+                sha = current && current.sha ? current.sha : '';
+            } else if (head.status !== 404) {
+                throw new Error('get-' + head.status);
+            }
+            const now = new Date();
+            const snapshot = {
+                savedAt: now.toISOString(),
+                count: items.length,
+                items: items
+            };
+            const body = {
+                message: 'backup: ' + now.toISOString(),
+                content: base64Utf8(JSON.stringify(snapshot, null, 2))
+            };
+            if (sha) body.sha = sha;
+            const put = await fetch(url, {
+                method: 'PUT',
+                headers: Object.assign({ 'Content-Type': 'application/json' }, ghHeaders(config.token)),
+                body: JSON.stringify(body)
+            });
+            if (put.status !== 200 && put.status !== 201) throw new Error('put-' + put.status);
+            try { localStorage.setItem(GH_LAST_KEY, now.toLocaleString()); } catch (error) { /* ignore */ }
+            return true;
+        } catch (error) {
+            showToast(t('ghFailed'), true);
+            return false;
+        } finally {
+            ghBusy = false;
+            if (ghAgain) {
+                ghAgain = false;
+                window.setTimeout(pushToGithub, 1500);
+            }
+        }
+    }
+
+    function scheduleGithubSync() {
+        const config = ghConfig();
+        if (!config.token || !config.repo || printMode) return;
+        window.clearTimeout(ghTimer);
+        ghTimer = window.setTimeout(pushToGithub, 2500);
+    }
+
+    function openGithubSheet() {
+        const config = ghConfig();
+        ghRepoInput.value = config.repo;
+        ghTokenInput.value = config.token;
+        let last = '';
+        try { last = localStorage.getItem(GH_LAST_KEY) || ''; } catch (error) { /* ignore */ }
+        ghStatusText(last ? t('ghLastSync', { time: last }) : '');
+        openSheet(ghScrim);
     }
 
     /* ---------- پیشاندان ---------- */
@@ -1514,6 +1659,7 @@
             items = cloudItems.map(normalizeItem);
             persistLocal();
             render();
+            scheduleGithubSync();
         });
 
         cloud.onAuth(async (user) => {
@@ -1535,6 +1681,7 @@
                     items = cloudItems.map(normalizeItem);
                     persistLocal();
                     render();
+                    scheduleGithubSync();
                 } else if (items.length) {
                     await cloud.save(items);
                     showToast(t('cloudUploaded'));
@@ -1677,6 +1824,7 @@
                 break;
             case 'backup': backupData(); break;
             case 'restore': importInput.click(); break;
+            case 'github': openGithubSheet(); break;
             case 'print': doPrint(); break;
             case 'clear': clearAll(); break;
             case 'signout': signOutCloud(); break;
@@ -1690,6 +1838,38 @@
 
     payScrim.addEventListener('click', (event) => {
         if (event.target === payScrim) closeSheet(payScrim);
+    });
+
+    ghScrim.addEventListener('click', (event) => {
+        if (event.target === ghScrim) closeSheet(ghScrim);
+    });
+
+    ghSaveBtn.addEventListener('click', async () => {
+        const repo = ghRepoInput.value.trim()
+            .replace(/^https?:\/\/github\.com\//i, '')
+            .replace(/\/+$/, '');
+        const token = ghTokenInput.value.trim();
+        if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) {
+            ghStatusText(t('ghInvalidRepo'));
+            return;
+        }
+        if (!token) {
+            ghStatusText(t('ghTokenNeeded'));
+            return;
+        }
+        try {
+            localStorage.setItem(GH_REPO_KEY, repo);
+            localStorage.setItem(GH_TOKEN_KEY, token);
+        } catch (error) {
+            ghStatusText(t('ghFailed'));
+            return;
+        }
+        ghSaveBtn.disabled = true;
+        ghStatusText(t('authChecking'));
+        const ok = await pushToGithub();
+        ghSaveBtn.disabled = false;
+        ghStatusText(ok ? t('ghSaved') : t('ghFailed'));
+        if (ok) showToast(t('ghSaved'));
     });
 
     document.addEventListener('click', (event) => {
