@@ -1098,10 +1098,11 @@
     }
 
     function printCurrencyCell(item, code) {
+        const label = esc(code === 'iqd' ? t('currencyIQD') : t('currencyUSD'));
         if (!hasCurrency(item, code)) {
-            return '<td class="col-money print-money--empty">—</td>';
+            return `<td class="col-money print-money--empty" data-label="${label}">—</td>`;
         }
-        return `<td class="col-money">${printMoney(amountOf(item, code), paidOf(item, code), remainingOf(item, code))}</td>`;
+        return `<td class="col-money" data-label="${label}">${printMoney(amountOf(item, code), paidOf(item, code), remainingOf(item, code))}</td>`;
     }
 
     function renderPrint(totals, paidCount) {
@@ -1109,16 +1110,18 @@
             ? items.map((item, index) => `
                 <tr>
                     <td class="col-index">${fmt(index + 1)}</td>
-                    <td>${esc(item.name)}${item.phone ? `<span class="print-phone" dir="ltr">${esc(item.phone)}</span>` : ''}</td>
+                    <td class="col-name">${esc(item.name)}${item.phone ? `<span class="print-phone" dir="ltr">${esc(item.phone)}</span>` : ''}</td>
                     ${printCurrencyCell(item, 'iqd')}
                     ${printCurrencyCell(item, 'usd')}
-                    <td class="col-note">${esc((item.note || '—').replace(/\s+/g, ' '))}</td>
-                    <td>${statusOf(item)}</td>
+                    <td class="col-note" data-label="${esc(t('thNote'))}">${esc((item.note || '—').replace(/\s+/g, ' '))}</td>
+                    <td class="col-status" data-label="${esc(t('thStatus'))}">${esc(statusOf(item))}</td>
                 </tr>`).join('')
             : `<tr><td colspan="6" style="text-align:center;color:#64748b">${t('noRecordsPrint')}</td></tr>`;
 
         printTotalEls.iqd.innerHTML = printMoney(totals.iqd.grand, totals.iqd.paid, totals.iqd.grand - totals.iqd.paid);
         printTotalEls.usd.innerHTML = printMoney(totals.usd.grand, totals.usd.paid, totals.usd.grand - totals.usd.paid);
+        printTotalEls.iqd.setAttribute('data-label', t('currencyIQD'));
+        printTotalEls.usd.setAttribute('data-label', t('currencyUSD'));
         printPaidCount.textContent = t('paidOf', { paid: fmt(paidCount), total: fmt(items.length) });
     }
 
