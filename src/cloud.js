@@ -75,7 +75,11 @@
             return true;
         } catch (error) {
             api.lastSaveErrorAt = Date.now();
-            emit('error', { code: 'sync' });
+            emit('error', {
+                code: 'sync',
+                firestoreCode: String((error && error.code) || ''),
+                firestoreMessage: String((error && error.message) || '')
+            });
             return false;
         }
     }
@@ -128,7 +132,11 @@
             if (stamp && stamp <= lastWriteAt) return;
             lastWriteAt = stamp;
             emit('data', data.items);
-        }, () => emit('error', { code: 'sync' }));
+        }, (error) => emit('error', {
+            code: 'sync',
+            firestoreCode: String((error && error.code) || ''),
+            firestoreMessage: String((error && error.message) || '')
+        }));
     };
 
     api.stopSync = stopSync;

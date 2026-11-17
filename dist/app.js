@@ -91,6 +91,8 @@
             cloudStatePending: 'هاوکاتکردن لەگەڵ هەژمار نەکراوە',
             cloudStateError: 'هاوکاتکردن سەرکەوتوو نەبوو',
             cloudLockedNotice: 'هاوکاتکردن لەگەڵ هەژمار ئێستا کار ناکات — داتاکانت لەم ئامێرە پارێزراون. لە Firebase Console، لە Firestore مافی خوێندنەوە و نووسین بۆ بەکارهێنەرانی چووەژوور پێبدە.',
+            cloudSetupNotice: 'بنکەدراوەی Firestore لە پڕۆژەکەت چالاک نەکراوە — لە Firebase Console: Build ← Firestore Database ← Create database. داتاکانت لەم ئامێرە پارێزراون.',
+            cloudRulesNotice: 'یاساکانی Firestore ڕێگەی پاشەکەوتکردن نادات — لە Firebase Console: Firestore Database ← Rules. داتاکانت لەم ئامێرە پارێزراون.',
             close: 'داخستن',
             addTitle: 'زیادکردنی ناوی نوێ',
             editTitle: 'دەستکاریکردنی تۆمار',
@@ -267,6 +269,8 @@
             cloudStatePending: 'لم تتم المزامنة مع الحساب',
             cloudStateError: 'تعذرت المزامنة مع الحساب',
             cloudLockedNotice: 'المزامنة مع الحساب لا تعمل حاليًا — بياناتك محفوظة على هذا الجهاز. افتح Firebase Console وفعّل صلاحية القراءة والكتابة في Firestore للمستخدمين المسجّلين.',
+            cloudSetupNotice: 'قاعدة بيانات Firestore غير مفعّلة في مشروعك — من Firebase Console: Build ← Firestore Database ← Create database. بياناتك محفوظة على هذا الجهاز.',
+            cloudRulesNotice: 'قواعد Firestore تمنع الحفظ — من Firebase Console: Firestore Database ← Rules. بياناتك محفوظة على هذا الجهاز.',
             close: 'إغلاق',
             addTitle: 'إضافة اسم جديد',
             editTitle: 'تعديل السجل',
@@ -443,6 +447,8 @@
             cloudStatePending: 'Not synced with your account yet',
             cloudStateError: "Couldn't sync with your account",
             cloudLockedNotice: "Account sync isn't working right now — your data is kept on this device. In Firebase Console, allow Firestore read/write for signed-in users.",
+            cloudSetupNotice: 'Firestore is not enabled in your Firebase project — in Firebase Console: Build → Firestore Database → Create database. Your data stays on this device.',
+            cloudRulesNotice: 'Firestore rules block saving — in Firebase Console: Firestore Database → Rules. Your data stays on this device.',
             close: 'Close',
             addTitle: 'Add new name',
             editTitle: 'Edit record',
@@ -646,6 +652,7 @@
     let recoveredFromBackup = false;
     let cloudActive = false;
     let cloudSyncTrouble = false;
+    let cloudIssueKind = '';
     let authMode = 'signin';
     let pendingAuthError = '';
     let items = loadItems();
@@ -876,6 +883,20 @@
         return Number(localStorage.getItem(LAST_CLOUD_KEY) || 0) || 0;
     }
 
+    function classifyCloudError(source) {
+        const code = String((source && (source.firestoreCode || source.code)) || '');
+        const message = String((source && (source.firestoreMessage || source.message)) || '');
+        if (/has not been used in project|SERVICE_DISABLED|is disabled/i.test(message)) return 'setup';
+        if (code === 'permission-denied') return 'rules';
+        return 'sync';
+    }
+
+    function cloudIssueText(kind) {
+        if (kind === 'setup') return t('cloudSetupNotice');
+        if (kind === 'rules') return t('cloudRulesNotice');
+        return t('cloudStateError');
+    }
+
     function refreshCloudState() {
         if (!cloudState) return;
         if (!cloudActive) {
@@ -885,7 +906,7 @@
         cloudState.hidden = false;
         cloudState.classList.toggle('menu__cloud--error', cloudSyncTrouble);
         if (cloudSyncTrouble) {
-            cloudState.textContent = t('cloudStateError');
+            cloudState.textContent = cloudIssueText(cloudIssueKind);
             return;
         }
         const at = cloudSavedAt();
@@ -1564,10 +1585,12 @@
                 return;
             }
             if (code === 'sync') {
+                const kind = classifyCloudError(payload);
                 const first = !cloudSyncTrouble;
                 cloudSyncTrouble = true;
+                cloudIssueKind = kind;
                 refreshCloudState();
-                if (first) showToast(t('cloudSyncFailed'), true);
+                if (first) showToast(cloudIssueText(kind), true);
                 return;
             }
             showToast(t('cloudSyncFailed'), true);
@@ -1575,6 +1598,7 @@
 
         cloud.onSaved((stamp) => {
             cloudSyncTrouble = false;
+            cloudIssueKind = '';
             try {
                 localStorage.setItem(LAST_CLOUD_KEY, String(stamp));
             } catch (error) {
@@ -1587,6 +1611,7 @@
             if (!cloudItems || !cloudItems.length) return;
             items = cloudItems.map(normalizeItem);
             cloudSyncTrouble = false;
+            cloudIssueKind = '';
             persistLocal();
             render();
         });
@@ -1596,6 +1621,7 @@
             if (!user) {
                 cloudActive = false;
                 cloudSyncTrouble = false;
+                cloudIssueKind = '';
                 menuAccount.hidden = true;
                 signOutItem.hidden = true;
                 refreshCloudState();
@@ -1628,13 +1654,15 @@
                     }
                 }
                 cloudSyncTrouble = false;
+                cloudIssueKind = '';
                 cloudActive = true;
                 cloud.startSync();
             } catch (error) {
                 cloudActive = true;
                 cloudSyncTrouble = true;
+                cloudIssueKind = classifyCloudError(error);
                 cloud.startSync();
-                showToast(t('cloudSyncFailed'), true);
+                showToast(cloudIssueText(cloudIssueKind), true);
             }
             refreshCloudState();
         });
@@ -1699,6 +1727,7 @@
         }
         cloudActive = false;
         cloudSyncTrouble = false;
+        cloudIssueKind = '';
         cloud.stopSync();
         persistLocal();
         render();
