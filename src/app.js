@@ -8,6 +8,7 @@
     const LANG_KEY = 'app_lang_v1';
     const SNAPSHOT_KEY = 'app_payments_device_snapshot_v1';
     const LAST_CLOUD_KEY = 'app_payments_last_cloud_save_v1';
+    const APP_VERSION = '29';
 
     const LANG_META = {
         ku: { htmlLang: 'ckb', dir: 'rtl', numberLocale: 'en-US', dateLocale: 'ckb-IQ' },
@@ -93,6 +94,7 @@
             cloudLockedNotice: 'هاوکاتکردن لەگەڵ هەژمار ئێستا کار ناکات — داتاکانت لەم ئامێرە پارێزراون. لە Firebase Console، لە Firestore مافی خوێندنەوە و نووسین بۆ بەکارهێنەرانی چووەژوور پێبدە.',
             cloudSetupNotice: 'بنکەدراوەی Firestore لە پڕۆژەکەت چالاک نەکراوە — لە Firebase Console: Build ← Firestore Database ← Create database. داتاکانت لەم ئامێرە پارێزراون.',
             cloudRulesNotice: 'یاساکانی Firestore ڕێگەی پاشەکەوتکردن نادات — لە Firebase Console: Firestore Database ← Rules. داتاکانت لەم ئامێرە پارێزراون.',
+            versionLine: 'وەشانی ئەپ: {version}',
             close: 'داخستن',
             addTitle: 'زیادکردنی ناوی نوێ',
             editTitle: 'دەستکاریکردنی تۆمار',
@@ -271,6 +273,7 @@
             cloudLockedNotice: 'المزامنة مع الحساب لا تعمل حاليًا — بياناتك محفوظة على هذا الجهاز. افتح Firebase Console وفعّل صلاحية القراءة والكتابة في Firestore للمستخدمين المسجّلين.',
             cloudSetupNotice: 'قاعدة بيانات Firestore غير مفعّلة في مشروعك — من Firebase Console: Build ← Firestore Database ← Create database. بياناتك محفوظة على هذا الجهاز.',
             cloudRulesNotice: 'قواعد Firestore تمنع الحفظ — من Firebase Console: Firestore Database ← Rules. بياناتك محفوظة على هذا الجهاز.',
+            versionLine: 'إصدار التطبيق: {version}',
             close: 'إغلاق',
             addTitle: 'إضافة اسم جديد',
             editTitle: 'تعديل السجل',
@@ -449,6 +452,7 @@
             cloudLockedNotice: "Account sync isn't working right now — your data is kept on this device. In Firebase Console, allow Firestore read/write for signed-in users.",
             cloudSetupNotice: 'Firestore is not enabled in your Firebase project — in Firebase Console: Build → Firestore Database → Create database. Your data stays on this device.',
             cloudRulesNotice: 'Firestore rules block saving — in Firebase Console: Firestore Database → Rules. Your data stays on this device.',
+            versionLine: 'App version: {version}',
             close: 'Close',
             addTitle: 'Add new name',
             editTitle: 'Edit record',
@@ -629,6 +633,7 @@
     const authIosNote = $('#authIosNote');
     const gateLangBtns = Array.from(document.querySelectorAll('[data-gate-lang]'));
     const menuAccount = $('#menuAccount');
+    const appVersion = $('#appVersion');
     const cloudState = $('#cloudState');
     const syncNowItem = $('#syncNowItem');
     const restoreDeviceItem = $('#restoreDeviceItem');
@@ -1294,6 +1299,7 @@
             btn.setAttribute('aria-checked', String(btn.dataset.langOption === lang));
         });
         applyStaticTranslations();
+        if (appVersion) appVersion.textContent = t('versionLine', { version: APP_VERSION });
         printDate.textContent = formatDate();
         refreshFormLabels();
         refreshAuthMode();

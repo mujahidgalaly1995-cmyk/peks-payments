@@ -2017,6 +2017,13 @@ body.print-mode .print-sheet {
     font-weight: 600;
 }
 
+.menu__version {
+    margin: 12px 0 0;
+    text-align: center;
+    font-size: 11px;
+    color: var(--slate-400);
+}
+
 body.auth-locked {
     overflow: hidden;
 }
